@@ -8,18 +8,24 @@ import './randomChar.scss';
 import mjolnir from '../../resources/img/mjolnir.png';
 
 class RandomChar extends Component {
-    constructor(props) {
-        super(props);
-    //Пока вызываю метод в конструкторе (временно), потом обязательно всё поменяется
-        this.updateChar();
-    }
-
     state = {
         char: {},
-        loading: true
+        loading: true,
+        error: false
     }
     //Создаём экземпляр класса
     marvelService = new MarvelService();
+
+    //Обновление стейта
+    componentDidMount() {
+        this.updateChar();
+        //Закоментировал чтобы не тратить запросы
+    //    this.timerId = setInterval(this.updateChar, 5000); 
+    }
+    //Удаляем цикл обновления
+    componentWillUnmount() {
+        clearInterval(this.timerId);
+    }
 
     //Метод чтобы записывать данные в стейт
     onCharLoaded = (char) => {
@@ -28,6 +34,13 @@ class RandomChar extends Component {
             loading: false,
             error: false
         });
+    }
+
+    //Показываем спинер при загрузке персонажа
+    onCharLoading = () => {
+        this.setState({
+            loading: true
+        })
     }
     
     //Обработка ошибки получения персонажа с сервера
@@ -41,6 +54,7 @@ class RandomChar extends Component {
     //Обновление персонажа
     updateChar = () => {
         const id = Math.floor(Math.random() * (1011400 - 1011000) + 1011000);
+        this.onCharLoading();
         this.marvelService
             .getCharacter(id)
             .then(this.onCharLoaded)
@@ -67,7 +81,7 @@ class RandomChar extends Component {
                     <p className="randomchar__title">
                         Or choose another one
                     </p>
-                    <button className="button button__main">
+                    <button onClick={this.updateChar} className="button button__main">
                         <div className="inner">try it</div>
                     </button>
                     <img src={mjolnir} alt="mjolnir" className="randomchar__decoration"/>
@@ -80,10 +94,15 @@ class RandomChar extends Component {
 //Коспонент для отрисовки спинера чтобы не ломать вторую часть компонента
 const View = ({char}) => {
     const {thumbnail, name, description, homepage, wiki} = char;
+    //Меняем размер заглушки когда у персонажа нет картинки
+    let imgStyle = {'objectFit' : 'cover'};
+    if (thumbnail === 'http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available.jpg') {
+        imgStyle = {'objectFit' : 'contain'};
+    }
 
     return (
         <div className="randomchar__block">
-        <img src={thumbnail} alt="Random character" className="randomchar__img"/>
+        <img src={thumbnail} alt="Random character" className="randomchar__img" style={imgStyle}/>
         <div className="randomchar__info">
             <p className="randomchar__name">{name}</p>
             <p className="randomchar__descr">
