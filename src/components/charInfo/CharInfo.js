@@ -39,6 +39,8 @@ class CharInfo extends Component {
             .getCharacter(charId)
             .then(this.onCharLoaded)
             .catch(this.onError)
+        //Своя ошибка чтобы проверить как отрабатывает предохранитель
+        // this.foo.bar = 0;
     }
 
         //Метод чтобы записывать данные в стейт
