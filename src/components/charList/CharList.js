@@ -11,19 +11,36 @@ class CharList extends Component {
     state = {
         charList: [],
         loading: true,
-        error: false
+        error: false,
+        newItemLoading: false,
+        offset: 302,
+        charEnded: false,
     }
 
     //Экземпляр класса
     marvelService = new MarvelService();
 
+        //Обновление персонажей
+        componentDidMount() {
+            this.onRequest();
+        }
+
     //Записываем данные в стейт данные в стейт
-    onCharListLoaded = (charList) => {
-        this.setState({
-            charList,
+    onCharListLoaded = (newCharList) => {
+        //Проверяем остались ли ещё персонажи в базе данных, если они закончились удаляем кнопку пагинации со страницы
+        let ended = false;
+        if (newCharList.length < 9) {
+            ended = true
+        }
+
+        this.setState(({offset, charList}) => ({
+            charList: [...charList, ...newCharList],
             loading: false,
-            error: false
-        })
+            error: false,
+            newItemLoading: false,
+            offset: offset + 9,
+            charEnded: ended,
+        }));
     }
 
     //Ошибка
@@ -33,12 +50,19 @@ class CharList extends Component {
             error: true,
         })
     }
-
-    //Обновление персонажей
-    componentDidMount() {
-        this.marvelService.getAllCharacters()
+    //Алгоритм запроса
+    onRequest = (offset) => {
+        this.onCharListLoading();
+        this.marvelService.getAllCharacters(offset)
         .then(this.onCharListLoaded)
         .catch(this.onCharListError)
+    }
+
+    //Показываем загрузку дополнительных персонажей (пагинация)
+    onCharListLoading = () => {
+        this.setState({
+            newItemLoading: true
+        })
     }
 
     //Создадим метод для оптимизации, чтобы не помещать такую конструкцию в render
@@ -68,7 +92,7 @@ class CharList extends Component {
     }
 
     render() {
-        const {charList, loading, error} = this.state;
+        const {charList, loading, error, offset, newItemLoading, charEnded} = this.state;
 
         const items = this.rednderItems(charList);
 
@@ -81,7 +105,12 @@ class CharList extends Component {
                 {errorMessage}
                 {spinner}
                 {content}
-                <button className="button button__main button__long">
+                <button 
+                    className="button button__main button__long"
+                    style={{"display": charEnded ? 'none' : 'block'}}
+                    disabled={newItemLoading}
+                    onClick={() => this.onRequest(offset)}
+                >
                     <div className="inner">load more</div>
                 </button>
             </div>
