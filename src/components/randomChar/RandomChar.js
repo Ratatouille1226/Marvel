@@ -1,4 +1,4 @@
-import { Component } from "react";
+import { useState, useEffect } from "react";
 
 import MarvelService from "../../services/MarvelService";
 import Spinner from "../spinner/Spinner";
@@ -7,62 +7,48 @@ import ErrorMessage from "../errorMessage/ErrorMessage";
 import './randomChar.scss';
 import mjolnir from '../../resources/img/mjolnir.png';
 
-class RandomChar extends Component {
-    state = {
-        char: {},
-        loading: true,
-        error: false
-    }
+const RandomChar = () => {
+    const [char, setChar] = useState({});
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+
     //Создаём экземпляр класса
-    marvelService = new MarvelService();
+    const marvelService = new MarvelService();
 
     //Обновление стейта
-    componentDidMount() {
-        this.updateChar();
-        //Закоментировал чтобы не тратить запросы
-    //    this.timerId = setInterval(this.updateChar, 5000); 
-    }
-    //Удаляем цикл обновления
-    componentWillUnmount() {
-        clearInterval(this.timerId);
-    }
+    useEffect(() => {
+        updateChar();
+    }, []);
 
     //Метод чтобы записывать данные в стейт
-    onCharLoaded = (char) => {
-        this.setState({
-            char,
-            loading: false,
-            error: false
-        });
+    const onCharLoaded = (char) => {
+        setChar(char);
+        setLoading(false);
+        setError(false);
     }
 
     //Показываем спинер при загрузке персонажа
-    onCharLoading = () => {
-        this.setState({
-            loading: true
-        })
+    const onCharLoading = () => {
+        setLoading(true);
     }
     
     //Обработка ошибки получения персонажа с сервера
-    onError = () => {
-        this.setState({
-            loading: false,
-            error: true
-        });
+    const onError = () => {
+        setLoading(false);
+        setError(true);
     }
 
     //Обновление персонажа
-    updateChar = () => {
+   const updateChar = () => {
         const id = Math.floor(Math.random() * (1011400 - 1011000) + 1011000);
-        this.onCharLoading();
-        this.marvelService
+        onCharLoading();
+        marvelService
             .getCharacter(id)
-            .then(this.onCharLoaded)
-            .catch(this.onError)
+            .then(onCharLoaded)
+            .catch(onError)
     }
 
-    render() {
-        const {char, loading, error} = this.state;
+
         //Выносим компоненты в переменные для сравнения в тернарных операторах и отображения на странице
         const errorMessage = error ? <ErrorMessage /> : null;
         const spinner = loading ? <Spinner /> : null;
@@ -81,14 +67,13 @@ class RandomChar extends Component {
                     <p className="randomchar__title">
                         Or choose another one
                     </p>
-                    <button onClick={this.updateChar} className="button button__main">
+                    <button onClick={updateChar} className="button button__main">
                         <div className="inner">try it</div>
                     </button>
                     <img src={mjolnir} alt="mjolnir" className="randomchar__decoration"/>
                 </div>
             </div>
         )
-    }
 }
 
 //Коспонент для отрисовки спинера чтобы не ломать вторую часть компонента

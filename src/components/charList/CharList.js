@@ -2,85 +2,66 @@ import MarvelService from "../../services/MarvelService";
 import Spinner from "../spinner/Spinner";
 import ErrorMessage from "../errorMessage/ErrorMessage";
 
-import PropTypes from 'prop-types';
-import { Component } from "react";
+import { useState, useEffect} from "react";
 
 import './charList.scss';
 
 
-class CharList extends Component {
-    state = {
-        charList: [],
-        loading: true,
-        error: false,
-        newItemLoading: false,
-        offset: 302,
-        charEnded: false,
-    }
+const CharList = (props) => {
+        const [charList, setCharList] = useState([]);   
+        const [loading, setLoading] = useState(true);
+        const [error, setError] = useState(false);
+        const [newItemLoading, setNewItemLoading] = useState(false);
+        const [offset, setOffset] = useState(302);
+        const [charEnded, setCharEnded] = useState(false);    
 
     //Экземпляр класса
-    marvelService = new MarvelService();
+   const marvelService = new MarvelService();
 
         //Обновление персонажей
-        componentDidMount() {
-            this.onRequest();
-        }
+        useEffect(() => {
+            onRequest();
+        }, []);
+
 
     //Записываем данные в стейт данные в стейт
-    onCharListLoaded = (newCharList) => {
+   const onCharListLoaded = (newCharList) => {
         //Проверяем остались ли ещё персонажи в базе данных, если они закончились удаляем кнопку пагинации со страницы
         let ended = false;
         if (newCharList.length < 9) {
             ended = true
         }
 
-        this.setState(({offset, charList}) => ({
-            charList: [...charList, ...newCharList],
-            loading: false,
-            error: false,
-            newItemLoading: false,
-            offset: offset + 9,
-            charEnded: ended,
-        }));
+        //Передал с аргументами чтобы отталкиваться от предыдущего состояния
+        setCharList(charList => [...charList, ...newCharList]);
+        setLoading(loading => false);
+        setNewItemLoading(newItemLoading => false);
+        setOffset(offset => offset + 9);
+        setCharEnded(charEnded => ended);
+
     }
 
     //Ошибка
-    onCharListError = () => {
-        this.setState({
-            loading: false,
-            error: true,
-        })
+    const onCharListError = () => {
+        setLoading(loading => false);
+        setError(true);
     }
     //Алгоритм запроса
-    onRequest = (offset) => {
-        this.onCharListLoading();
-        this.marvelService.getAllCharacters(offset)
-        .then(this.onCharListLoaded)
-        .catch(this.onCharListError)
+   const onRequest = (offset) => {
+        onCharListLoading();
+        marvelService.getAllCharacters(offset)
+        .then(onCharListLoaded)
+        .catch(onCharListError)
     }
 
     //Показываем загрузку дополнительных персонажей (пагинация)
-    onCharListLoading = () => {
-        this.setState({
-            newItemLoading: true
-        })
+    const onCharListLoading = () => {
+        setNewItemLoading(true);
     }
 
-    //РАБОТА С РЕФАМИ
-    itemRefs = [];
 
-    setRef = (ref) => {
-        this.itemRefs.push(ref);
-    }
-
-    focusOnItem = (id) => {
-        this.itemRefs.forEach(item => item.classList.remove('char__item_selected'));
-        this.itemRefs[id].classList.add('char__item_selected');
-        this.itemRefs[id].focus();
-    }
-
-    //Создадим метод для оптимизации, чтобы не помещать такую конструкцию в render
-    rednderItems(arr) {
+    //Создадим метод для оптимизации
+    function rednderItems(arr) {
        const items = arr.map((item, i) => {
             let imgStyle = {'objectFit' : 'cover'};
             if (item.thumbnail === 'http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available.jpg') {
@@ -89,11 +70,10 @@ class CharList extends Component {
 
             return (
                 <li className="char__item"
-                ref={this.setRef} 
+                tabIndex={0}
                 key={item.id}
                 onClick={() => {
-                    this.props.onCharSelected(item.id);
-                    this.focusOnItem(i);
+                    props.onCharSelected(item.id);
                 }}
                 >
                     <img src={item.thumbnail} alt={item.name} style={imgStyle}/>
@@ -109,10 +89,7 @@ class CharList extends Component {
         )
     }
 
-    render() {
-        const {charList, loading, error, offset, newItemLoading, charEnded} = this.state;
-
-        const items = this.rednderItems(charList);
+        const items = rednderItems(charList);
 
         const errorMessage = error ? <ErrorMessage/> : null;
         const spinner = loading ? <Spinner/> : null;
@@ -127,17 +104,12 @@ class CharList extends Component {
                     className="button button__main button__long"
                     style={{"display": charEnded ? 'none' : 'block'}}
                     disabled={newItemLoading}
-                    onClick={() => this.onRequest(offset)}
+                    onClick={() => onRequest(offset)}
                 >
                     <div className="inner">load more</div>
                 </button>
             </div>
         )
-    }
-}
-
-CharList.propTypes = {
-    onCharSelected: PropTypes.func.isRequired
 }
 
 export default CharList;

@@ -5,37 +5,32 @@ import CharInfo from "../charInfo/CharInfo";
 
 import decoration from '../../resources/img/vision.png';
 
-import { Component } from "react";
+import { useState } from "react";
 import ErrorBoundary from "../errorBoundary/ErrorBoundary";
 
-class App extends Component {
-    state = {
-        selectedChar: null,
-    }
+const App = () => {
+    const [selectedChar, setChar] = useState(null);
+
     //Получаем айди нашего персонажа с компонетна charlist чтобы потом передать его в charinfo и отобразить информацию о персонаже
-    onCharSelected = (id) => {
-        this.setState({
-            selectedChar: id
-        });
+    const onCharSelected = (id) => {
+        setChar(id);
     }
 
-    render() {
         return (
             <div className="app">
                 <AppHeader/>
                 <main>
                     <RandomChar/>
                     <div className="char__content">
-                        <CharList onCharSelected={this.onCharSelected}/>
+                        <CharList onCharSelected={onCharSelected}/>
                         <ErrorBoundary>
-                            <CharInfo charId={this.state.selectedChar}/>
+                            <CharInfo charId={selectedChar}/>
                         </ErrorBoundary>
                     </div>
                     <img className="bg-decoration" src={decoration} alt="vision"/>
                 </main>
             </div>
         )
-    }
 }
 
 export default App;
