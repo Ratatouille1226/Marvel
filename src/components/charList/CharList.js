@@ -1,4 +1,4 @@
-import MarvelService from "../../services/MarvelService";
+import useMarvelService from "../../services/MarvelService";
 import Spinner from "../spinner/Spinner";
 import ErrorMessage from "../errorMessage/ErrorMessage";
 
@@ -9,18 +9,16 @@ import './charList.scss';
 
 const CharList = (props) => {
         const [charList, setCharList] = useState([]);   
-        const [loading, setLoading] = useState(true);
-        const [error, setError] = useState(false);
         const [newItemLoading, setNewItemLoading] = useState(false);
         const [offset, setOffset] = useState(302);
         const [charEnded, setCharEnded] = useState(false);    
 
-    //Экземпляр класса
-   const marvelService = new MarvelService();
+    //Деструктурируем собственный хук
+   const {loading, error, getAllCharacters} = useMarvelService();
 
         //Обновление персонажей
         useEffect(() => {
-            onRequest();
+            onRequest(offset, true);
         }, []);
 
 
@@ -34,24 +32,18 @@ const CharList = (props) => {
 
         //Передал с аргументами чтобы отталкиваться от предыдущего состояния
         setCharList(charList => [...charList, ...newCharList]);
-        setLoading(loading => false);
         setNewItemLoading(newItemLoading => false);
         setOffset(offset => offset + 9);
         setCharEnded(charEnded => ended);
 
     }
 
-    //Ошибка
-    const onCharListError = () => {
-        setLoading(loading => false);
-        setError(true);
-    }
     //Алгоритм запроса
-   const onRequest = (offset) => {
+   const onRequest = (offset, initial) => {
+        initial ? onCharListLoading(false) : onCharListLoading(true);
         onCharListLoading();
-        marvelService.getAllCharacters(offset)
-        .then(onCharListLoaded)
-        .catch(onCharListError)
+        getAllCharacters(offset)
+        .then(onCharListLoaded);
     }
 
     //Показываем загрузку дополнительных персонажей (пагинация)
@@ -92,14 +84,13 @@ const CharList = (props) => {
         const items = rednderItems(charList);
 
         const errorMessage = error ? <ErrorMessage/> : null;
-        const spinner = loading ? <Spinner/> : null;
-        const content = !(error || loading) ? items : null;
+        const spinner = loading && newItemLoading ? <Spinner/> : null;
 
         return (
             <div className="char__list">
                 {errorMessage}
                 {spinner}
-                {content}
+                {items}
                 <button 
                     className="button button__main button__long"
                     style={{"display": charEnded ? 'none' : 'block'}}

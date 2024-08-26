@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-import MarvelService from "../../services/MarvelService";
+import useMarvelService from "../../services/MarvelService";
 import Spinner from "../spinner/Spinner";
 import ErrorMessage from "../errorMessage/ErrorMessage";
 
@@ -9,11 +9,9 @@ import mjolnir from '../../resources/img/mjolnir.png';
 
 const RandomChar = () => {
     const [char, setChar] = useState({});
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(false);
 
-    //Создаём экземпляр класса
-    const marvelService = new MarvelService();
+    //Деструктурируем собственный хук
+    const {loading, error, clearError, getCharacter} = useMarvelService();
 
     //Обновление стейта
     useEffect(() => {
@@ -23,31 +21,14 @@ const RandomChar = () => {
     //Метод чтобы записывать данные в стейт
     const onCharLoaded = (char) => {
         setChar(char);
-        setLoading(false);
-        setError(false);
     }
-
-    //Показываем спинер при загрузке персонажа
-    const onCharLoading = () => {
-        setLoading(true);
-    }
-    
-    //Обработка ошибки получения персонажа с сервера
-    const onError = () => {
-        setLoading(false);
-        setError(true);
-    }
-
     //Обновление персонажа
    const updateChar = () => {
+        clearError();
         const id = Math.floor(Math.random() * (1011400 - 1011000) + 1011000);
-        onCharLoading();
-        marvelService
-            .getCharacter(id)
+            getCharacter(id)
             .then(onCharLoaded)
-            .catch(onError)
     }
-
 
         //Выносим компоненты в переменные для сравнения в тернарных операторах и отображения на странице
         const errorMessage = error ? <ErrorMessage /> : null;

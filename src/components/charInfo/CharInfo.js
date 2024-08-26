@@ -2,18 +2,16 @@ import './charInfo.scss';
 
 import { useState, useEffect } from 'react';
 
-import MarvelService from '../../services/MarvelService';
+import useMarvelService from '../../services/MarvelService';
 import Skeleton from '../skeleton/Skeleton';
 import Spinner from "../spinner/Spinner";
 import ErrorMessage from "../errorMessage/ErrorMessage";
 
 const CharInfo = (props) => {
     const [char, setChar] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(false);
 
     //Создаём экземпляр класса
-    const marvelService = new MarvelService();
+    const {loading, error, getCharacter} = useMarvelService();
 
         //Обновление стейта
         useEffect(() => {
@@ -27,11 +25,8 @@ const CharInfo = (props) => {
             return;
         }
 
-        onCharLoading();
-        marvelService
-            .getCharacter(charId)
+             getCharacter(charId)
             .then(onCharLoaded)
-            .catch(onError)
         //Своя ошибка чтобы проверить как отрабатывает предохранитель
         // this.foo.bar = 0;
     }
@@ -39,18 +34,8 @@ const CharInfo = (props) => {
         //Метод чтобы записывать данные в стейт
         const onCharLoaded = (char) => {
             setChar(char);
-            setLoading(false);
-            setError(false);
         }
-        //Показываем спинер при загрузке персонажа
-        const onCharLoading = () => {
-            setLoading(true);
-        }
-        //Обработка ошибки получения персонажа с сервера
-        const onError = () => {
-            setLoading(false);
-            setError(true);
-        }
+
 
         const skeleton = char || loading || error ? null : <Skeleton />
         const errorMessage = error ? <ErrorMessage/> : null;
